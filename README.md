@@ -5,5 +5,5 @@
 [planning/app_overview.md](planning/app_overview.md)
 
 ## Github　Pages
-レスポンシブ非対応。モバイル限定。
+レスポンシブ非対応。モバイル限定。  
 URL: https://kuruki-alt.github.io/perpoi/
