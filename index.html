@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>コスパ計算</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: system-ui, -apple-system, sans-serif; background: #f2ece2; color: #1c1008; min-height: 100vh; }
+    .page { max-width: 390px; margin: 0 auto; padding: 0 0 48px; }
+
+    .header { background: #2c1c0c; padding: 20px 20px 18px; }
+    .header-top { display: flex; align-items: center; gap: 12px; }
+    .header-icon { width: 44px; height: 44px; object-fit: contain; flex-shrink: 0; border-radius: 8px; }
+    .header-title { font-size: 22px; font-weight: 700; color: #e8d8c0; letter-spacing: -0.01em; }
+    .header-sub { font-size: 12px; color: #806040; margin-top: 5px; }
+
+    .card { background: #f8f2e8; border: 1px solid #c8a870; border-radius: 12px; margin: 16px 12px 0; overflow: hidden; }
+    .card-header { padding: 14px 16px; border-bottom: 1px solid #dcc090; display: flex; align-items: center; gap: 8px; }
+    .card-header-bar { width: 3px; height: 16px; background: #7a4820; border-radius: 99px; flex-shrink: 0; }
+    .card-title { font-size: 13px; font-weight: 700; color: #1c1008; }
+
+    .input-section { padding: 16px; }
+    .input-group { margin-bottom: 14px; }
+    .input-group:last-child { margin-bottom: 0; }
+    .input-label { font-size: 12px; font-weight: 600; color: #4a2c10; margin-bottom: 6px; }
+    .input-hint { font-weight: 400; color: #a08060; }
+    .input-row { display: flex; align-items: center; gap: 8px; }
+    .input-field { flex: 1; height: 46px; border: 1.5px solid #c8a870; border-radius: 8px; padding: 0 12px; font-size: 20px; font-weight: 700; text-align: right; color: #1c1008; background: #fff; -moz-appearance: textfield; outline: none; transition: border-color .15s, box-shadow .15s; }
+    .input-field:focus { border-color: #7a4820; box-shadow: 0 0 0 3px rgba(122,72,32,.15); }
+    .input-field::-webkit-outer-spin-button, .input-field::-webkit-inner-spin-button { -webkit-appearance: none; }
+    .input-field::placeholder { color: #c8a870; }
+    .input-unit { font-size: 13px; color: #806040; min-width: 36px; }
+
+    .result-section { border-top: 1px solid #dcc090; background: #f2ece2; padding: 16px; }
+    .result-empty { font-size: 12px; color: #a08060; text-align: center; padding: 8px 0; }
+
+    .calc-block { margin-bottom: 0; }
+    .calc-block + .calc-block { margin-top: 16px; padding-top: 16px; border-top: 1px solid #dcc090; }
+    .calc-block-title { font-size: 10px; font-weight: 700; color: #906840; letter-spacing: .1em; text-transform: uppercase; margin-bottom: 10px; }
+    .calc-row { display: flex; align-items: baseline; padding: 2px 0; }
+    .calc-op { width: 20px; flex-shrink: 0; font-size: 15px; font-weight: 700; color: #906840; text-align: center; }
+    .calc-label { flex: 1; font-size: 12px; color: #4a2c10; padding-left: 2px; }
+    .calc-val { font-size: 16px; font-weight: 600; color: #1c1008; text-align: right; min-width: 90px; }
+    .calc-val.is-ref { color: #a08060; font-weight: 500; }
+    .calc-line { margin: 6px 0 6px 20px; border: none; border-top: 2px solid #c8a870; }
+    .calc-row.is-answer .calc-op { color: #7a4820; }
+    .calc-row.is-answer .calc-label { font-size: 14px; font-weight: 700; color: #1c1008; }
+    .calc-row.is-answer .calc-val { font-size: 24px; font-weight: 800; color: #7a4820; }
+
+    .summary-row { display: flex; justify-content: space-between; align-items: baseline; margin-top: 14px; padding-top: 12px; border-top: 1px solid #dcc090; }
+    .summary-label { font-size: 13px; color: #4a2c10; font-weight: 500; }
+    .summary-val { font-size: 24px; font-weight: 800; color: #7a4820; }
+    .footer { text-align: center; padding: 24px 16px 0; font-size: 11px; color: #a08060; }
+  </style>
+</head>
+<body>
+<div class="page">
+  <header class="header">
+    <div class="header-top">
+      <img src="icon.png" class="header-icon" alt="">
+      <div>
+        <div class="header-title">コスパ計算</div>
+        <div class="header-sub">割引 &amp; ポイント還元の実質価格をすぐ計算</div>
+      </div>
+    </div>
+  </header>
+  <div class="card">
+    <div class="card-header"><div class="card-header-bar"></div><div class="card-title">入力</div></div>
+    <div class="input-section">
+      <div class="input-group"><div class="input-label">セール価格</div><div class="input-row"><input id="salePrice" class="input-field" type="number" inputmode="decimal" placeholder="0"><span class="input-unit">円</span></div></div>
+      <div class="input-group"><div class="input-label">割引率 <span class="input-hint">（空欄 = スキップ）</span></div><div class="input-row"><input id="discountRate" class="input-field" type="number" inputmode="decimal" placeholder="—"><span class="input-unit">% OFF</span></div></div>
+      <div class="input-group"><div class="input-label">ポイント還元率 <span class="input-hint">（空欄 = スキップ）</span></div><div class="input-row"><input id="pointRate" class="input-field" type="number" inputmode="decimal" placeholder="—"><span class="input-unit">%</span></div></div>
+    </div>
+    <div class="result-section">
+      <div class="result-empty" id="emptyMsg">価格を入力すると結果が表示されます</div>
+      <div class="calc-block" id="discountBlock" style="display:none;"><div class="calc-block-title">割引計算</div><div class="calc-row"><span class="calc-op"></span><span class="calc-label">元値</span><span class="calc-val" id="origPrice">—</span></div><div class="calc-row"><span class="calc-op">−</span><span class="calc-label">セール価格</span><span class="calc-val is-ref" id="salePriceRef">—</span></div><hr class="calc-line"><div class="calc-row is-answer"><span class="calc-op">=</span><span class="calc-label">割引額</span><span class="calc-val" id="discountAmt">—</span></div></div>
+      <div class="calc-block" id="pointBlock" style="display:none;"><div class="calc-block-title">ポイント還元</div><div class="calc-row"><span class="calc-op"></span><span class="calc-label">セール価格</span><span class="calc-val is-ref" id="salePriceRef2">—</span></div><div class="calc-row"><span class="calc-op">−</span><span class="calc-label">獲得ポイント</span><span class="calc-val" id="pointsEarned">—</span></div><hr class="calc-line"><div class="calc-row is-answer"><span class="calc-op">=</span><span class="calc-label">実質価格</span><span class="calc-val" id="realPrice">—</span></div></div>
+      <div class="summary-row" id="realDiscountRow" style="display:none;"><span class="summary-label">実質割引率</span><span class="summary-val" id="realDiscountRate">—</span></div>
+    </div>
+  </div>
+  <div class="footer">© コスパ計算</div>
+</div>
+<script>
+  const salePriceEl=document.getElementById('salePrice'),discountRateEl=document.getElementById('discountRate'),pointRateEl=document.getElementById('pointRate');
+  const emptyMsg=document.getElementById('emptyMsg'),discountBlock=document.getElementById('discountBlock'),pointBlock=document.getElementById('pointBlock'),realDiscountRow=document.getElementById('realDiscountRow');
+  const origPriceEl=document.getElementById('origPrice'),salePriceRefEl=document.getElementById('salePriceRef'),discountAmtEl=document.getElementById('discountAmt'),salePriceRef2El=document.getElementById('salePriceRef2'),pointsEarnedEl=document.getElementById('pointsEarned'),realPriceEl=document.getElementById('realPrice'),realDiscountRateEl=document.getElementById('realDiscountRate');
+  function fmt(n){return '¥'+Math.round(n).toLocaleString('ja-JP');}
+  function calculate(){
+    const sale=parseFloat(salePriceEl.value),disc=parseFloat(discountRateEl.value),point=parseFloat(pointRateEl.value);
+    const hasSale=!isNaN(sale)&&sale>0,hasDisc=!isNaN(disc)&&disc>0&&disc<100,hasPoint=!isNaN(point)&&point>0&&point<100;
+    let showDiscount=false,showPoint=false,showRealDiscount=false,origPrice=null;
+    if(hasSale&&hasDisc){origPrice=sale/(1-disc/100);const d=origPrice-sale;origPriceEl.textContent=fmt(origPrice);salePriceRefEl.textContent=fmt(sale);discountAmtEl.textContent=fmt(d);showDiscount=true;}
+    if(hasSale&&hasPoint){const pts=Math.floor(sale*point/100),real=sale-pts,base=origPrice||sale;salePriceRef2El.textContent=fmt(sale);pointsEarnedEl.textContent=pts.toLocaleString('ja-JP')+' pt';realPriceEl.textContent=fmt(real);realDiscountRateEl.textContent=((base-real)/base*100).toFixed(1)+' %';showPoint=true;showRealDiscount=true;}
+    const hasAny=showDiscount||showPoint;
+    emptyMsg.style.display=hasAny?'none':'';discountBlock.style.display=showDiscount?'':'none';pointBlock.style.display=showPoint?'':'none';realDiscountRow.style.display=showRealDiscount?'':'none';
+  }
+  [salePriceEl,discountRateEl,pointRateEl].forEach(el=>el.addEventListener('input',calculate));
+</script>
+</body>
+</html>
